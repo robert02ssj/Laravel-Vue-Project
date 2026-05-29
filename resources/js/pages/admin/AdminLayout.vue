@@ -10,6 +10,8 @@
         <router-link to="/admin/reservas"  class="nav-link">Reservas</router-link>
         <router-link to="/admin/usuarios"  class="nav-link">Usuarios</router-link>
         <router-link v-if="auth.isAdmin" to="/admin/ajustes" class="nav-link">Ajustes del sitio</router-link>
+        <div class="border-t my-2"></div>
+        <a href="/php-crud/" class="nav-link" style="color:#7c3aed;">👤 Usuarios (PHP clásico)</a>
       </nav>
     </aside>
 

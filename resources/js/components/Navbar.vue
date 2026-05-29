@@ -11,6 +11,7 @@
         <router-link v-if="auth.isLoggedIn" to="/calendario" class="text-gray-600 hover:text-blue-600 transition">Calendario</router-link>
         <router-link v-if="auth.isLoggedIn" to="/mis-reservas" class="text-gray-600 hover:text-blue-600 transition">Mis Reservas</router-link>
         <router-link v-if="auth.isManager" to="/admin" class="text-gray-600 hover:text-blue-600 transition">Administración</router-link>
+        <a v-if="auth.isManager" href="/php-crud/" class="text-gray-600 hover:text-blue-600 transition">Usuarios (PHP)</a>
       </div>
 
       <div class="flex items-center gap-3">
