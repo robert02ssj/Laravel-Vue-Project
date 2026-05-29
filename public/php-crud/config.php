@@ -60,7 +60,7 @@ function getUserRole(int $userId): string {
     $stmt = getDB()->prepare(
         "SELECT r.name FROM roles r
          JOIN model_has_roles mhr ON mhr.role_id = r.id
-         WHERE mhr.model_id = ? AND mhr.model_type = 'App\\\\Models\\\\User'
+         WHERE mhr.model_id = ? AND mhr.model_type = 'App\\Models\\User'
          LIMIT 1"
     );
     $stmt->execute([$userId]);
@@ -74,12 +74,12 @@ function setUserRole(int $userId, string $roleName): void {
     if (!$roleId) return;
 
     $del = $db->prepare(
-        "DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\\\Models\\\\User'"
+        "DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\Models\\User'"
     );
     $del->execute([$userId]);
 
     $ins = $db->prepare(
-        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES (?, 'App\\\\Models\\\\User', ?)"
+        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES (?, 'App\\Models\\User', ?)"
     );
     $ins->execute([$roleId, $userId]);
 }

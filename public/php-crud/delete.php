@@ -18,10 +18,10 @@ if (!$user) redirect('index.php', 'Usuario no encontrado.', 'error');
 $db = getDB();
 
 // Eliminar roles asociados
-$db->prepare("DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\\\Models\\\\User'")->execute([$id]);
+$db->prepare("DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\Models\\User'")->execute([$id]);
 
 // Eliminar tokens Sanctum
-$db->prepare("DELETE FROM personal_access_tokens WHERE tokenable_id = ? AND tokenable_type = 'App\\\\Models\\\\User'")->execute([$id]);
+$db->prepare("DELETE FROM personal_access_tokens WHERE tokenable_id = ? AND tokenable_type = 'App\\Models\\User'")->execute([$id]);
 
 // Eliminar usuario
 $db->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
