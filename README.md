@@ -1,23 +1,30 @@
 # Sistema de Reservas Multi-Recurso
 
-Aplicación fullstack para la gestión de recursos compartidos con disponibilidad temporal. Desarrollada con Laravel 13 (backend) y Vue 3 (frontend SPA).
+Aplicación web para la gestión de reservas de recursos compartidos (salas, equipos, instalaciones...).
+Desarrollada con **Laravel 13** en el backend y **Vue 3** en el frontend como SPA.
+
+Proyecto realizado para el módulo de **Desarrollo de Aplicaciones Web**.
 
 ---
 
-## Requisitos
+## Requisitos previos
 
-- PHP 8.2+ con extensiones `pdo_sqlite` y `sqlite3`
-- Composer
-- Node.js 18+ y npm
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) (o Docker Engine en Linux)
+- [Composer](https://getcomposer.org/)
+- [Node.js 18+](https://nodejs.org/) y npm
+
+> Laravel Sail se encarga de levantar todos los servicios (PHP, MySQL) usando Docker.  
+> No hace falta instalar PHP ni MySQL en tu máquina.
 
 ---
 
-## Instalación
+## Instalación con Laravel Sail
 
-### 1. Entrar al proyecto
+### 1. Clonar el proyecto y entrar a la carpeta
 
 ```bash
-cd ~/Documentos/Proyectos/LARAVEL/reservas
+git clone <url-del-repositorio>
+cd reservas
 ```
 
 ### 2. Instalar dependencias PHP
@@ -26,57 +33,59 @@ cd ~/Documentos/Proyectos/LARAVEL/reservas
 composer install
 ```
 
-### 3. Configurar entorno
+### 3. Copiar el fichero de configuración
 
 ```bash
 cp .env.example .env
-php artisan key:generate
 ```
 
-El proyecto usa **SQLite** por defecto. No necesitas configurar ningún servidor de base de datos.
-
-### 4. Crear la base de datos y cargar datos de prueba
+### 4. Levantar los contenedores con Sail
 
 ```bash
-php artisan migrate:fresh --seed
+./vendor/bin/sail up -d
 ```
 
-Esto crea todas las tablas y genera:
-- 3 categorías (Salas, Equipamiento, Instalaciones deportivas)
+Esto arranca el servidor PHP y la base de datos MySQL en segundo plano.
+
+> La primera vez tarda un poco porque Docker descarga las imágenes necesarias.
+
+### 5. Generar la clave de la aplicación
+
+```bash
+./vendor/bin/sail artisan key:generate
+```
+
+### 6. Crear las tablas y cargar los datos de prueba
+
+```bash
+./vendor/bin/sail artisan migrate:fresh --seed
+```
+
+Esto genera:
+- 3 categorías (Salas de reuniones, Equipamiento, Instalaciones deportivas)
 - 4 recursos de ejemplo
 - 3 usuarios con distintos roles
 - 1 reserva de ejemplo
 - Ajustes del sitio por defecto
 
-### 5. Instalar dependencias JavaScript
+### 7. Instalar dependencias JavaScript y compilar el frontend
 
 ```bash
 npm install
-```
-
----
-
-## Arrancar el proyecto
-
-Necesitas **dos terminales** abiertas en la carpeta del proyecto.
-
-**Terminal 1 — Backend Laravel:**
-
-```bash
-php artisan serve
-```
-
-Disponible en: `http://localhost:8000`
-
-**Terminal 2 — Frontend Vite (hot-reload):**
-
-```bash
 npm run dev
 ```
 
-Abre el navegador en `http://localhost:8000`.
+### 8. Abrir la aplicación
 
-> Para producción, ejecuta `npm run build` en lugar de `npm run dev`. Los assets compilados se guardan en `public/build/`.
+Abre el navegador en: **http://localhost**
+
+---
+
+## Parar los contenedores
+
+```bash
+./vendor/bin/sail down
+```
 
 ---
 
@@ -86,7 +95,7 @@ Abre el navegador en `http://localhost:8000`.
 |---|---|---|
 | `admin@reservas.es` | `password` | Administrador |
 | `gestor@reservas.es` | `password` | Gestor |
-| `usuario@reservas.es` | `password` | Usuario |
+| `usuario@reservas.es` | `password` | Usuario normal |
 
 ---
 
@@ -100,8 +109,8 @@ reservas/
 │   │   ├── CategoryController.php     # CRUD categorías
 │   │   ├── ResourceController.php     # CRUD recursos + disponibilidad
 │   │   ├── ReservationController.php  # CRUD reservas + calendario
-│   │   ├── AdminController.php        # Dashboard, usuarios
-│   │   └── SiteSettingController.php  # Ajustes del sitio
+│   │   ├── AdminController.php        # Panel de administración
+│   │   └── SiteSettingController.php  # Configuración del sitio
 │   └── Models/
 │       ├── User.php
 │       ├── Category.php
@@ -110,17 +119,18 @@ reservas/
 │       ├── ReservationLog.php
 │       └── SiteSetting.php
 ├── database/
-│   ├── migrations/                    # Esquema completo
+│   ├── migrations/                    # Esquema de la base de datos
 │   └── seeders/DatabaseSeeder.php     # Datos de prueba
+├── docker-compose.yml                 # Configuración de Sail (Docker)
 ├── routes/
-│   ├── api.php                        # Endpoints REST
-│   └── web.php                        # Catch-all → SPA
+│   ├── api.php                        # Endpoints de la API REST
+│   └── web.php                        # Ruta catch-all para la SPA
 └── resources/
     ├── js/
     │   ├── app.js                     # Punto de entrada Vue
-    │   ├── router/index.js            # Vue Router
+    │   ├── router/index.js            # Vue Router (rutas del frontend)
     │   ├── stores/
-    │   │   ├── auth.js                # Pinia: sesión y roles
+    │   │   ├── auth.js                # Pinia: sesión y roles del usuario
     │   │   └── settings.js            # Pinia: ajustes del sitio
     │   ├── components/
     │   │   ├── Navbar.vue
@@ -131,25 +141,49 @@ reservas/
     │       ├── Home.vue
     │       ├── Login.vue
     │       ├── Register.vue
-    │       ├── Resources.vue          # Vista de recursos con filtros
-    │       ├── Calendar.vue           # FullCalendar
+    │       ├── Resources.vue
+    │       ├── Calendar.vue
     │       ├── MyReservations.vue
     │       └── admin/
-    │           ├── AdminLayout.vue    # Sidebar de administración
-    │           ├── Dashboard.vue      # KPIs y últimas reservas
+    │           ├── AdminLayout.vue
+    │           ├── Dashboard.vue
     │           ├── Categories.vue
     │           ├── Resources.vue
     │           ├── Reservations.vue
     │           ├── Users.vue
-    │           └── Settings.vue       # Personalización del sitio
-    └── views/app.blade.php            # Shell HTML de la SPA
+    │           └── Settings.vue
+    └── views/app.blade.php            # Plantilla HTML base de la SPA
+```
+
+---
+
+## Comandos útiles con Sail
+
+```bash
+# Ejecutar comandos artisan
+./vendor/bin/sail artisan <comando>
+
+# Resetear la base de datos con datos de prueba
+./vendor/bin/sail artisan migrate:fresh --seed
+
+# Ver todas las rutas de la API
+./vendor/bin/sail artisan route:list --path=api
+
+# Acceder a la consola interactiva de Laravel
+./vendor/bin/sail artisan tinker
+
+# Limpiar la caché
+./vendor/bin/sail artisan config:clear && ./vendor/bin/sail artisan cache:clear
+
+# Ver los logs en tiempo real
+./vendor/bin/sail artisan pail
 ```
 
 ---
 
 ## Endpoints de la API
 
-### Públicos
+### Públicos (sin autenticación)
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -165,14 +199,14 @@ reservas/
 | Método | Ruta | Descripción |
 |---|---|---|
 | `POST` | `/api/logout` | Cerrar sesión |
-| `GET` | `/api/me` | Usuario actual |
+| `GET` | `/api/me` | Datos del usuario actual |
 | `GET` | `/api/reservations` | Mis reservas (admin ve todas) |
 | `POST` | `/api/reservations` | Crear reserva |
 | `PUT` | `/api/reservations/{id}` | Actualizar estado |
 | `DELETE` | `/api/reservations/{id}` | Cancelar reserva |
-| `GET` | `/api/reservations/calendar?start=&end=` | Eventos para FullCalendar |
+| `GET` | `/api/reservations/calendar?start=&end=` | Eventos para el calendario |
 
-### Solo admin / gestor
+### Solo administrador / gestor
 
 | Método | Ruta | Descripción |
 |---|---|---|
@@ -180,27 +214,9 @@ reservas/
 | `POST/PUT/DELETE` | `/api/resources/{id}` | Gestión de recursos |
 | `GET` | `/api/admin/dashboard` | Estadísticas globales |
 | `GET` | `/api/admin/users` | Listado de usuarios |
-| `PUT` | `/api/admin/users/{id}` | Cambiar nombre/email/rol |
+| `PUT` | `/api/admin/users/{id}` | Editar usuario |
 | `DELETE` | `/api/admin/users/{id}` | Eliminar usuario |
-| `POST` | `/api/settings` | Guardar ajustes del sitio |
-
----
-
-## Comandos útiles
-
-```bash
-# Resetear la base de datos con datos de prueba
-php artisan migrate:fresh --seed
-
-# Ver todas las rutas registradas
-php artisan route:list --path=api
-
-# Consola interactiva
-php artisan tinker
-
-# Limpiar caché
-php artisan config:clear && php artisan cache:clear
-```
+| `POST` | `/api/settings` | Guardar configuración del sitio |
 
 ---
 
@@ -208,10 +224,11 @@ php artisan config:clear && php artisan cache:clear
 
 | Capa | Tecnología |
 |---|---|
-| Backend | Laravel 13, PHP 8.5 |
+| Backend | Laravel 13, PHP 8.3 |
+| Entorno de desarrollo | Laravel Sail (Docker) |
 | Autenticación | Laravel Sanctum |
-| Roles | Spatie Laravel Permission |
-| Base de datos | SQLite (dev) / MySQL-MariaDB (prod) |
+| Roles y permisos | Spatie Laravel Permission |
+| Base de datos | MySQL 8.4 |
 | Frontend | Vue 3, Vite |
 | Estado global | Pinia |
 | Enrutamiento cliente | Vue Router 4 |

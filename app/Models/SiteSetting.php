@@ -5,29 +5,48 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
+// Modelo para guardar la configuración del sitio en base de datos.
+// Funciona como una tabla clave-valor: cada fila tiene un 'key' y un 'value'.
+// Ejemplos de ajustes: site_name, primary_color, allow_registration...
+
 class SiteSetting extends Model
 {
-    protected $fillable = ['key', 'value', 'type', 'group'];
+    // Campos que se pueden rellenar masivamente
+    protected $fillable = [
+        'key',   // nombre del ajuste (ej: 'site_name')
+        'value', // valor del ajuste (ej: 'Sistema de Reservas')
+        'type',  // tipo de dato: string, boolean, integer, color
+        'group', // grupo al que pertenece: general, appearance, reservations
+    ];
 
-    public static function get(string $key, mixed $default = null): mixed
+    // Obtener el valor de un ajuste concreto por su clave
+    // Usa caché para no consultar la base de datos cada vez
+    public static function get(string $clave, mixed $porDefecto = null): mixed
     {
-        return Cache::rememberForever("setting:{$key}", function () use ($key, $default) {
-            $setting = static::where('key', $key)->first();
-            return $setting ? $setting->value : $default;
+        // Cache::rememberForever guarda el resultado indefinidamente hasta que se borre
+        return Cache::rememberForever("setting:{$clave}", function () use ($clave, $porDefecto) {
+            $ajuste = static::where('key', $clave)->first();
+            return $ajuste ? $ajuste->value : $porDefecto;
         });
     }
 
-    public static function set(string $key, mixed $value, string $type = 'string', string $group = 'general'): void
+    // Guardar o actualizar un ajuste
+    public static function set(string $clave, mixed $valor, string $tipo = 'string', string $grupo = 'general'): void
     {
+        // updateOrCreate: si existe el ajuste lo actualiza, si no lo crea
         static::updateOrCreate(
-            ['key' => $key],
-            ['value' => $value, 'type' => $type, 'group' => $group]
+            ['key' => $clave],
+            ['value' => $valor, 'type' => $tipo, 'group' => $grupo]
         );
-        Cache::forget("setting:{$key}");
+
+        // Borramos la caché de este ajuste para que la próxima lectura coja el valor nuevo
+        Cache::forget("setting:{$clave}");
     }
 
-    public static function getGroup(string $group): array
+    // Obtener todos los ajustes de un grupo como array clave => valor
+    // Ejemplo: SiteSetting::getGroup('appearance') → ['primary_color' => '#3B82F6', ...]
+    public static function getGroup(string $grupo): array
     {
-        return static::where('group', $group)->pluck('value', 'key')->toArray();
+        return static::where('group', $grupo)->pluck('value', 'key')->toArray();
     }
 }

@@ -7,52 +7,41 @@ echo "  Sistema de Reservas - Instalación"
 echo "========================================="
 echo ""
 
-# Requisitos mínimos
-command -v php  >/dev/null 2>&1 || { echo "ERROR: PHP no encontrado."; exit 1; }
-command -v node >/dev/null 2>&1 || { echo "ERROR: Node.js no encontrado."; exit 1; }
-command -v npm  >/dev/null 2>&1 || { echo "ERROR: npm no encontrado."; exit 1; }
-
-# Verificar extensiones PHP necesarias
-php -m | grep -q pdo_sqlite || { echo "ERROR: Extensión PHP pdo_sqlite no activa. Actívala en php.ini"; exit 1; }
-php -m | grep -q sqlite3    || { echo "ERROR: Extensión PHP sqlite3 no activa. Actívala en php.ini"; exit 1; }
-
-# Instalar Composer si no está disponible
-if ! command -v composer >/dev/null 2>&1; then
-    echo "→ Instalando Composer..."
-    curl -sS https://getcomposer.org/installer | php -- --install-dir="$HOME/.local/bin" --filename=composer
-    export PATH="$HOME/.local/bin:$PATH"
-fi
+# Comprobar Docker
+command -v docker >/dev/null 2>&1 || { echo "ERROR: Docker no encontrado. Instálalo en https://docs.docker.com/get-docker/"; exit 1; }
+command -v composer >/dev/null 2>&1 || { echo "ERROR: Composer no encontrado."; exit 1; }
 
 echo "→ Instalando dependencias PHP..."
 composer install --no-interaction --prefer-dist --optimize-autoloader
 
-echo "→ Instalando dependencias Node..."
-npm install
-
 echo "→ Configurando entorno..."
 if [ ! -f .env ]; then
     cp .env.example .env
-    php artisan key:generate
 else
     echo "   .env ya existe, omitiendo."
 fi
 
-echo "→ Creando base de datos SQLite..."
-touch database/database.sqlite
+echo "→ Levantando contenedores con Sail (Docker)..."
+./vendor/bin/sail up -d
+
+echo "→ Esperando a que MySQL esté listo..."
+sleep 10
+
+echo "→ Generando clave de la aplicación..."
+./vendor/bin/sail artisan key:generate
 
 echo "→ Ejecutando migraciones y seeders..."
-php artisan migrate:fresh --seed --force
+./vendor/bin/sail artisan migrate:fresh --seed --force
+
+echo "→ Instalando dependencias JavaScript..."
+npm install
 
 echo "→ Compilando assets..."
 npm run build
 
-echo "→ Limpiando caché..."
-php artisan config:clear
-php artisan cache:clear
-
 echo ""
 echo "========================================="
-echo "  ✓ Instalación completada"
+echo "  Instalación completada"
 echo "========================================="
 echo ""
 echo "  Usuarios de prueba:"
@@ -60,7 +49,8 @@ echo "    admin@reservas.es   / password  (Administrador)"
 echo "    gestor@reservas.es  / password  (Gestor)"
 echo "    usuario@reservas.es / password  (Usuario)"
 echo ""
-echo "  Para arrancar:"
-echo "    php artisan serve      (backend  → http://localhost:8000)"
-echo "    npm run dev            (frontend → hot-reload)"
+echo "  Abre el navegador en: http://localhost"
+echo ""
+echo "  Para parar los contenedores:"
+echo "    ./vendor/bin/sail down"
 echo ""
