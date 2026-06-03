@@ -23,10 +23,10 @@ if (!$user) redirect('index.php', 'Usuario no encontrado.', 'error');
 $db = getDB();
 
 // Eliminar roles asociados (tabla intermedia model_has_roles).
-$db->prepare("DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\Models\\User'")->execute([$id]);
+$db->prepare("DELETE FROM model_has_roles WHERE model_id = ? AND model_type = ?")->execute([$id, MODEL_TYPE]);
 
 // Eliminar tokens personales (si se usa Laravel Sanctum en la DB de ejemplo).
-$db->prepare("DELETE FROM personal_access_tokens WHERE tokenable_id = ? AND tokenable_type = 'App\\Models\\User'")->execute([$id]);
+$db->prepare("DELETE FROM personal_access_tokens WHERE tokenable_id = ? AND tokenable_type = ?")->execute([$id, MODEL_TYPE]);
 
 // Eliminar el registro del usuario.
 $db->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);

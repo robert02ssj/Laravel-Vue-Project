@@ -87,14 +87,16 @@ function getRoleId(string $roleName): ?int {
     return $row ? (int)$row['id'] : null;
 }
 
+define('MODEL_TYPE', 'App\Models\User');
+
 function getUserRole(int $userId): string {
     $stmt = getDB()->prepare(
         "SELECT r.name FROM roles r
          JOIN model_has_roles mhr ON mhr.role_id = r.id
-         WHERE mhr.model_id = ? AND mhr.model_type = 'App\\Models\\User'
+         WHERE mhr.model_id = ? AND mhr.model_type = ?
          LIMIT 1"
     );
-    $stmt->execute([$userId]);
+    $stmt->execute([$userId, MODEL_TYPE]);
     $row = $stmt->fetch();
     return $row ? $row['name'] : 'user';
 }
@@ -105,10 +107,10 @@ function setUserRole(int $userId, string $roleName): void {
     if (!$roleId) return;
 
     $db->prepare(
-        "DELETE FROM model_has_roles WHERE model_id = ? AND model_type = 'App\\Models\\User'"
-    )->execute([$userId]);
+        "DELETE FROM model_has_roles WHERE model_id = ? AND model_type = ?"
+    )->execute([$userId, MODEL_TYPE]);
 
     $db->prepare(
-        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES (?, 'App\\Models\\User', ?)"
-    )->execute([$roleId, $userId]);
+        "INSERT INTO model_has_roles (role_id, model_type, model_id) VALUES (?, ?, ?)"
+    )->execute([$roleId, MODEL_TYPE, $userId]);
 }
