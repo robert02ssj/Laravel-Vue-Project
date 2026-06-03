@@ -28,6 +28,11 @@ class ReservationController extends Controller
             $query->where('user_id', $usuario->id);
         }
 
+        // Filtro por estado si se pasa ?status=pending|confirmed|cancelled
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
         // Devolvemos los resultados paginados (20 por página)
         return response()->json($query->paginate(20));
     }
